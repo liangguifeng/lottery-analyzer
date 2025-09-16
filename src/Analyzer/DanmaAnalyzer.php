@@ -1,158 +1,256 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Liangguifeng\LotteryAnalyzer\Analyzer;
 
+use Liangguifeng\LotteryAnalyzer\Support\ArrayHelper;
+
+/**
+ * 胆码规律分析：最后一组本期至少一位上奖.
+ */
 class DanmaAnalyzer
 {
+    /**
+     * @var array 历史开奖数据
+     */
     protected array $historyData;
 
-    protected array $analyzerData;
-
+    /**
+     * Constructor.
+     *
+     * @param array $historyData 历史开奖数据
+     */
     public function __construct(array $historyData)
     {
+        // 先排序，防呆...
+        krsort($historyData);
         $this->historyData = $historyData;
     }
 
-    public function get($periods = 3, $minConsecutive = 3)
+    /**
+     * 分析胆码规律.
+     *
+     * @param int $periods 间隔期数
+     * @param int $minConsecutive 最小连续命中期数
+     * @param string $numRate 数字比例
+     * @return array
+     */
+    public function analyze(int $periods = 3, int $minConsecutive = 3, int $combinationSize = 3): array
     {
-        // 预测数据
-        $predictData= array_slice($this->historyData, 0, $periods, true);
+        // 分析数据(剔除预测数据的结果集)
+        $analyzerData = $this->getAnalyzerData($periods);
 
-        // 分析数据
-        $this->analyzerData = array_slice($this->historyData, $periods, -1, true);
+        // 拆分为规律区间
+        $chunks = array_slice(ArrayHelper::chuck($analyzerData, $periods + 1), 0, $minConsecutive);
 
-        // 间隔期数拆分
-        $chuckAnalyzerData = $this->arrayChuck($this->analyzerData, $periods + 1);
+        // 连续命中结果
+        $hitLists = array_map(fn ($chunk) => $this->analyzeChunk($chunk, $periods, $combinationSize), $chunks);
 
-        // 最小连续期数
-        $chunks = array_slice($chuckAnalyzerData, 0, $minConsecutive);
+        // 满足最小连续命中期数的结果
+        $result = $this->intersectHitResults($hitLists);
 
-        $hitList = [];
-        foreach ($chunks as $chunk) {
-            $chunk = array_reverse($chunk, true);
-            // 规律期数
-            $checkChuckData = array_slice($chunk, 0, $periods, true);
-            // 规律期数 - 排列组合
-            $checkData = $this->generateCombinationsAcrossGroups($checkChuckData);
-
-            // 预测
-            $nextData = array_slice($chunk, $periods, $periods + 1, true);
-
-            // 检查规律期数的排列组合在预测期数内出现的数据
-            $data = $this->check($checkData, reset($nextData));
-            if (!empty($data)) {
-                $hitList[] = $data;
-            }
-        }
-
-        $result = [];
-        foreach ($hitList[0] as $key => $value) {
-            $existsInAll = true;
-
-            for ($i = 1; $i < count($hitList); $i++) {
-                if (!array_key_exists($key, $hitList[$i])) {
-                    $existsInAll = false;
-                    break;
-                }
-            }
-
-            if ($existsInAll) {
-                $result[] = $key;
-            }
-        }
-
-        return $result;
+        return [
+            'periods' => $periods,
+            'min_consecutive' => $minConsecutive,
+            'combination_size' => $combinationSize,
+            'hit_count' => count($result),
+            'hit_list' => $this->formatResult($result, $periods),
+        ];
     }
 
-    private function check($checkData, $nextData)
+    /**
+     * 根据命中路径，处理历史数据.
+     *
+     * @param array $history 历史数据
+     * @param int $periods 间隔期数
+     * @param string $path 命中的具体坐标
+     * @return array
+     */
+    public function processHistory(array $history, int $periods, string $path): array
     {
-        $result = [];
-        foreach ($checkData as $period => $checkList) {
-            foreach ($checkList as $value) {
-                if (in_array($value, $nextData)) {
-                    $result[$period] = implode('|', $checkList);
-                }
+        // 1. 按 key 升序排序
+        ksort($history);
+        $keys = array_keys($history);
+        $total = count($keys);
+        if ($total === 0) {
+            return [];
+        }
+
+        // 2. 从最大 key 开始分片
+        $groups = [];
+        $cursor = $total;
+
+        // 第一个分片：取 periods 个
+        $take = min($periods, $cursor);
+        $start = $cursor - $take;
+        $groups[] = array_slice($keys, $start, $take); // 保持升序
+        $cursor -= $take;
+
+        // 后续每轮取 periods + 1 个
+        while ($cursor > 0) {
+            $take = min($periods + 1, $cursor);
+            $start = $cursor - $take;
+            $groups[] = array_slice($keys, $start, $take);
+            $cursor -= $take;
+        }
+
+        // 3. 解析 path => [ group => [pos, pos] ]
+        $coords = [];
+        foreach (explode('|', $path) as $p) {
+            if (strpos($p, '_') === false) {
+                continue;
             }
-        }
-
-        return $result;
-    }
-
-    private function arrayChuck(array $array, int $size): array
-    {
-        $result = [];
-        $temp = [];
-        foreach ($array as $k => $v) {
-            $temp[$k] = $v;
-            if (count($temp) === $size) {
-                $result[] = $temp;
-                $temp = [];
+            [$g, $pos] = explode('_', $p);
+            $g = (int) $g;
+            $pos = (int) $pos;
+            if ($g <= 0 || $pos <= 0) {
+                continue;
             }
-        }
-        return $result;
-    }
-
-    private function generateCombinationsAcrossGroups(array $source, int $m = 3): array
-    {
-        $items = [];
-        $groupIndex = 1;
-        foreach ($source as $period => $vals) {
-            foreach ($vals as $i => $v) {
-                $items[] = [
-                    'period' => $period,
-                    'group' => $groupIndex,
-                    'index' => $i + 1,
-                    'value' => $v
-                ];
-            }
-            $groupIndex++;
+            $coords[$g][] = $pos;
         }
 
-        $n = count($items);
+        // 去重每个 group 的 pos
+        foreach ($coords as $g => $arr) {
+            $coords[$g] = array_values(array_unique($arr));
+        }
+
+        // 4. 处理每个分片
         $result = [];
-        if ($m <= 0 || $m > $n) {
-            return $result;
-        }
-        if ($m === 3) {
-            for ($a = 0; $a < $n - 2; $a++) {
-                for ($b = $a + 1; $b < $n - 1; $b++) {
-                    for ($c = $b + 1; $c < $n; $c++) {
-                        $k = $items[$a]['group'] . '_' . $items[$a]['index']
-                            . '|' .  $items[$b]['group'] . '_' . $items[$b]['index']
-                            . '|' .  $items[$c]['group'] . '_' . $items[$c]['index'];
+        foreach ($groups as $groupKeys) {
+            // groupKeys 是分片内升序排列的期号数组
+            foreach ($groupKeys as $localIndex => $periodKey) {
+                $groupNum = $localIndex + 1; // 分片内 group 编号从1开始
+                $origin = $history[$periodKey];
+                $hit = [];
 
-                        $result[$k] = [
-                            $items[$a]['value'],
-                            $items[$b]['value'],
-                            $items[$c]['value']
-                        ];
+                if (isset($coords[$groupNum])) {
+                    foreach ($coords[$groupNum] as $pos) {
+                        if (isset($origin[$pos - 1])) {
+                            $hit[] = $pos;
+                        }
                     }
                 }
+
+                $result[$periodKey] = [
+                    'origin' => $origin,
+                    'hit' => array_values($hit),
+                    'is_predict' => false,
+                ];
+
+                // 预测位标记
+                if ($localIndex === $periods) {
+                    $result[$periodKey]['is_predict'] = true;
+                }
             }
-            return $result;
         }
 
-        $stack = [];
-        $generate = function ($start, $depth) use (&$generate, $items, &$result, &$stack, $m, $n) {
-            if ($depth === $m) {
-                $parts = [];
-                $vals = [];
-                foreach ($stack as $idx) {
-                    $it = $items[$idx];
-                    $parts[] = $it['group'] . '_' . $it['index'];
-                    $vals[] = $it['value'];
+        // 5. 最终按 key 升序返回
+        ksort($result);
+
+        return $result;
+    }
+
+    /**
+     * 获取待分析数据(剔除预测数据的结果集).
+     *
+     * @param int $periods 间隔期数
+     * @return array
+     */
+    private function getAnalyzerData(int $periods): array
+    {
+        return array_slice($this->historyData, $periods, null, true);
+    }
+
+    /**
+     * 按块分析.
+     *
+     * @param array $chunk 待分析数据块
+     * @param int $periods 间隔期数
+     * @param int $combinationSize 待分析数据块的组合大小
+     * @return array
+     */
+    private function analyzeChunk(array $chunk, int $periods, int $combinationSize): array
+    {
+        // 排序，还是一样防呆...
+        ksort($chunk);
+
+        // 间隔期数
+        $patternData = array_slice($chunk, 0, $periods, true);
+
+        // 排列组合
+        $combinations = ArrayHelper::generateCrossGroupCombinations($patternData, $combinationSize);
+
+        // 预测期数据
+        $nextData = array_slice($chunk, $periods, $periods + 1, true);
+
+        return $this->checkCombinationsAgainstNext($combinations, reset($nextData));
+    }
+
+    /**
+     * 返回组合中与预测结果产生交集的数组.
+     *
+     * @param array $combinations 组合列表
+     * @param array $nextData 预测数据
+     * @return array
+     */
+    private function checkCombinationsAgainstNext(array $combinations, array $nextData): array
+    {
+        $result = [];
+        foreach ($combinations as $key => $values) {
+            // 组合的数据中，如果有和预测结果产生交集的则命中
+            if (array_intersect($values, $nextData)) {
+                $result[$key] = implode('|', $values);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 获取结果集的交集.
+     *
+     * @param array $hitLists 所有分块命中的结果集
+     * @return array
+     */
+    private function intersectHitResults(array $hitLists): array
+    {
+        if (empty($hitLists)) {
+            return [];
+        }
+
+        // 获取第一个结果集作为参照物
+        $first = array_keys($hitLists[0]);
+
+        return array_values(array_filter($first, function ($key) use ($hitLists) {
+            foreach ($hitLists as $hits) {
+                // 如果结果集的key不在其他结果集的key中，则剔除
+                if (!array_key_exists($key, $hits)) {
+                    return false;
                 }
-                $result[implode('|', $parts)] = $vals;
-                return;
             }
+            return true;
+        }));
+    }
 
-            for ($i = $start; $i <= $n - ($m - $depth); $i++) {
-                $stack[$depth] = $i;
-                $generate($i + 1, $depth + 1);
-            }
-        };
+    /**
+     * 格式化结果集.
+     *
+     * @param array $paths 命中的全部坐标
+     * @param int $periods 间隔期数
+     * @return array
+     */
+    private function formatResult(array $paths, int $periods): array
+    {
+        $result = [];
+        foreach ($paths as $path) {
+            $hitList = $this->processHistory($this->historyData, $periods, $path);
+            $result[] = [
+                'path_string' => $path,
+                'path' => explode('|', $path),
+                'items' => $hitList,
+            ];
+        }
 
-        $generate(0, 0);
         return $result;
     }
 }
