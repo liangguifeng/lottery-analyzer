@@ -7,7 +7,7 @@ namespace Liangguifeng\LotteryAnalyzer\Analyzer;
 use Liangguifeng\LotteryAnalyzer\Support\ArrayHelper;
 
 /**
- * 杀百个和尾：预测数字之和尾数，一定不与百位、个位之和尾数相同
+ * 杀百个和尾：预测数字之和尾数，一定不与百位、个位之和尾数相同.
  */
 class KillHundredOneSumTailAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
 {
@@ -16,7 +16,7 @@ class KillHundredOneSumTailAnalyzer extends AbstractAnalyzer implements Analyzer
      *
      * @var int[]
      */
-    private $killPath = [1, 2];
+    private $killPath = [1, 3];
 
     /**
      * 分析.

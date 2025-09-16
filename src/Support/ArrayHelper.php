@@ -10,7 +10,7 @@ namespace Liangguifeng\LotteryAnalyzer\Support;
 class ArrayHelper
 {
     /**
-     * 根据数组path获取新数组
+     * 根据数组path获取新数组.
      *
      * @param array $array
      * @param array $path 非数组下标，而是[1,2,3,4]这种坐标路径
@@ -20,7 +20,7 @@ class ArrayHelper
     {
         $result = [];
         foreach ($path as $key) {
-            $result[] = $array[$key-1];
+            $result[] = $array[$key - 1];
         }
         return $result;
     }
