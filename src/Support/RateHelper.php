@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Liangguifeng\LotteryAnalyzer\Support;
 
 use Liangguifeng\LotteryAnalyzer\Exceptions\InvalidDataException;
@@ -14,5 +16,4 @@ class RateHelper
         }
         return $arr;
     }
-
 }

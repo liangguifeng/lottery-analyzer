@@ -1,12 +1,13 @@
 <?php
 
-namespace Liangguifeng\LotteryAnalyzer\Support;
+declare(strict_types=1);
 
+namespace Liangguifeng\LotteryAnalyzer\Support;
 
 class ArrayHelper
 {
     /**
-     * 保留key进行数组分块，元素不足则丢弃
+     * 保留key进行数组分块，元素不足则丢弃.
      *
      * @param array $array
      * @param int $size
@@ -27,7 +28,7 @@ class ArrayHelper
     }
 
     /**
-     * 生成跨组排列组合
+     * 生成跨组排列组合.
      *
      * @param array $groups 多组数组
      * @param int $combinationSize 每个组合中选择的元素数量，默认 3
@@ -42,11 +43,11 @@ class ArrayHelper
             foreach ($groupValues as $index => $value) {
                 $flattenedItems[] = [
                     'group' => $groupNumber,
-                    'position' => (int)$index + 1, // 从1开始计数
+                    'position' => (int) $index + 1, // 从1开始计数
                     'value' => $value,
                 ];
             }
-            $groupNumber++;
+            ++$groupNumber;
         }
 
         $totalItems = count($flattenedItems);
@@ -68,7 +69,7 @@ class ArrayHelper
             }
 
             // 从当前索引开始生成组合
-            for ($i = $startIndex; $i <= $totalItems - ($combinationSize - $depth); $i++) {
+            for ($i = $startIndex; $i <= $totalItems - ($combinationSize - $depth); ++$i) {
                 $stack[$depth] = $i;
                 $recurse($i + 1, $depth + 1);
             }

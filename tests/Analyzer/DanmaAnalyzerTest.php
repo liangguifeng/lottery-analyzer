@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Analyzer;
 
 use Liangguifeng\LotteryAnalyzer\Analyzer\DanmaAnalyzer;

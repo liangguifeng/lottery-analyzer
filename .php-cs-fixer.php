@@ -29,7 +29,6 @@ return (new PhpCsFixer\Config())
         ],
         'blank_line_before_statement' => [
             'statements' => [
-                'namespace',
                 'declare',
             ],
         ],
