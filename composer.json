@@ -38,7 +38,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Liangguifeng\\LotteryAnalyzer\\Tests\\": "tests/"
+      "Tests\\": "tests/"
     }
   },
   "scripts": {

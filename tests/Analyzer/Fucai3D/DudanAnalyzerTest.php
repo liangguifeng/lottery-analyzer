@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Analyzer\Fucai3D;
+namespace Tests\Analyzer\Fucai3D;
 
 use Liangguifeng\LotteryAnalyzer\Analyzer\DudanAnalyzer;
 
@@ -15,13 +15,13 @@ use Liangguifeng\LotteryAnalyzer\Analyzer\DudanAnalyzer;
 class DudanAnalyzerTest extends BaseFucai3DTest
 {
     /**
-     * Constructor.
+     * Setup.
      *
-     * @param string $name
+     * @return void
      */
-    public function __construct(string $name)
+    protected function setUp(): void
     {
-        parent::__construct($name);
+        parent::setUp();
         $this->analyzer = new DudanAnalyzer($this->history);
     }
 

@@ -2,18 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Analyzer\Fucai3D;
+namespace Tests\Analyzer\Fucai3D;
 
 use Liangguifeng\LotteryAnalyzer\Analyzer\AnalyzerInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
  * 【福彩3D】测试基类.
- *
- * @internal
- * @coversNothing
  */
-class BaseFucai3DTest extends TestCase
+abstract class BaseFucai3DTest extends TestCase
 {
     /**
      * 300+期测试数据.

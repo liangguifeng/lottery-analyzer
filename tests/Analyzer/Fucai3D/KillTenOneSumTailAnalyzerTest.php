@@ -2,26 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Analyzer\Fucai3D;
+namespace Tests\Analyzer\Fucai3D;
 
 use Liangguifeng\LotteryAnalyzer\Analyzer\KillTenOneSumTailAnalyzer;
 
 /**
  * 【杀十个和尾】测试用例.
  *
- * @internal
  * @coversNothing
  */
 class KillTenOneSumTailAnalyzerTest extends BaseFucai3DTest
 {
     /**
-     * Constructor.
+     * Setup.
      *
-     * @param string $name
+     * @return void
      */
-    public function __construct(string $name)
+    protected function setUp(): void
     {
-        parent::__construct($name);
+        parent::setUp();
         $this->analyzer = new KillTenOneSumTailAnalyzer($this->history);
     }
 

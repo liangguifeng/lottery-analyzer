@@ -155,7 +155,7 @@ class DanmaAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
      */
     private function analyzeChunk(array $chunk, int $periods, int $combinationSize): array
     {
-        // 排序，还是一样防呆...
+        // 排序
         ksort($chunk);
 
         // 间隔期数
