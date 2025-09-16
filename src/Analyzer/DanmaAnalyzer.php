@@ -9,31 +9,14 @@ use Liangguifeng\LotteryAnalyzer\Support\ArrayHelper;
 /**
  * 胆码规律分析：最后一组本期至少一位上奖.
  */
-class DanmaAnalyzer
+class DanmaAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
 {
     /**
-     * @var array 历史开奖数据
-     */
-    protected array $historyData;
-
-    /**
-     * Constructor.
-     *
-     * @param array $historyData 历史开奖数据
-     */
-    public function __construct(array $historyData)
-    {
-        // 先排序，防呆...
-        krsort($historyData);
-        $this->historyData = $historyData;
-    }
-
-    /**
-     * 分析胆码规律.
+     * 分析.
      *
      * @param int $periods 间隔期数
      * @param int $minConsecutive 最小连续命中期数
-     * @param string $numRate 数字比例
+     * @param int $combinationSize 组合大小
      * @return array
      */
     public function analyze(int $periods = 3, int $minConsecutive = 3, int $combinationSize = 3): array
@@ -67,7 +50,7 @@ class DanmaAnalyzer
      * @param string $path 命中的具体坐标
      * @return array
      */
-    public function processHistory(array $history, int $periods, string $path): array
+    private function processHistory(array $history, int $periods, string $path): array
     {
         // 1. 按 key 升序排序
         ksort($history);
