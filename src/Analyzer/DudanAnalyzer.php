@@ -7,7 +7,7 @@ namespace Liangguifeng\LotteryAnalyzer\Analyzer;
 use Liangguifeng\LotteryAnalyzer\Support\ArrayHelper;
 
 /**
- * 毒胆码规律分析：
+ * 毒胆码规律分析：预测结果数组中的数字，不可能上奖(随着组合大小增大，概率越小).
  */
 class DudanAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
 {
