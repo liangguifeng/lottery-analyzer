@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Liangguifeng\LotteryAnalyzer\Enum;
 
 /**
+ * 异常错误码定义.
+ *
  * @property $value
  */
 enum ErrorCode: int

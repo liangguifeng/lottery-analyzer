@@ -7,6 +7,9 @@ namespace Liangguifeng\LotteryAnalyzer\Support;
 use Liangguifeng\LotteryAnalyzer\Enum\ErrorCode;
 use Liangguifeng\LotteryAnalyzer\Exceptions\InvalidDataException;
 
+/**
+ * 比率工具类.
+ */
 class RateHelper
 {
     public static function getRateToArray(string $rate)

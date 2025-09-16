@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Liangguifeng\LotteryAnalyzer\Support;
 
+/**
+ * 数组处理工具类.
+ */
 class ArrayHelper
 {
     /**
