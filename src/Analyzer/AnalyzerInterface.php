@@ -7,14 +7,6 @@ namespace Liangguifeng\LotteryAnalyzer\Analyzer;
 interface AnalyzerInterface
 {
     /**
-     * 是否返回最大连续期数.
-     *
-     * @param bool $withMaxConsecutive
-     * @return static
-     */
-    public function withMaxConsecutive(bool $withMaxConsecutive): static;
-
-    /**
      * 分析.
      *
      * @param int $periods 间隔期数

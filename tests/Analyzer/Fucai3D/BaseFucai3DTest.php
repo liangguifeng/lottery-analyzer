@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Analyzer\Fucai3D;
 
-use Liangguifeng\LotteryAnalyzer\Analyzer\AnalyzerInterface;
+use Liangguifeng\LotteryAnalyzer\Analyzer\AbstractAnalyzer;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -395,9 +395,9 @@ abstract class BaseFucai3DTest extends TestCase
     /**
      * 测试对象
      *
-     * @var AnalyzerInterface
+     * @var AbstractAnalyzer
      */
-    protected AnalyzerInterface $analyzer;
+    protected AbstractAnalyzer $analyzer;
 
     /**
      * phpunit 生命周期：开始前
