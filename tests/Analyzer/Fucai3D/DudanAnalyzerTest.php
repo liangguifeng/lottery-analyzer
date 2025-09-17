@@ -16,8 +16,6 @@ class DudanAnalyzerTest extends BaseFucai3DTest
 {
     /**
      * Setup.
-     *
-     * @return void
      */
     protected function setUp(): void
     {

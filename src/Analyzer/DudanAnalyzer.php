@@ -38,7 +38,7 @@ class DudanAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
             'min_consecutive' => $minConsecutive,
             'combination_size' => $combinationSize,
             'hit_count' => count($result),
-            'hit_list' => $this->formatResult($result, $periods),
+            'hit_list' => $this->formatResult($result, $periods, $minConsecutive),
         ];
     }
 
@@ -47,10 +47,11 @@ class DudanAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
      *
      * @param array $history 历史数据
      * @param int $periods 间隔期数
+     * @param int $minConsecutive 最小连续命中期数
      * @param string $path 命中的具体坐标
      * @return array
      */
-    private function processHistory(array $history, int $periods, string $path): array
+    private function processHistory(array $history, int $periods, int $minConsecutive, string $path): array
     {
         // 1. 按 key 升序排序
         ksort($history);
@@ -100,7 +101,7 @@ class DudanAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
 
         // 4. 处理每个分片
         $result = [];
-        foreach ($groups as $groupKeys) {
+        foreach ($groups as $times => $groupKeys) {
             // groupKeys 是分片内升序排列的期号数组
             foreach ($groupKeys as $localIndex => $periodKey) {
                 $groupNum = $localIndex + 1; // 分片内 group 编号从1开始
@@ -117,13 +118,19 @@ class DudanAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
 
                 $result[$periodKey] = [
                     'origin' => $origin,
-                    'hit' => array_values($hit),
+                    'hit' => [],
+                    'periods' => $periodKey,
                     'is_predict' => false,
                 ];
 
-                // 预测位标记
-                if ($localIndex === $periods) {
-                    $result[$periodKey]['is_predict'] = true;
+                if ($times < $minConsecutive) {
+                    $result[$periodKey]['hit'] = array_values($hit);
+                    // 预测位标记
+                    if ($localIndex === $periods) {
+                        $result[$periodKey]['is_predict'] = true;
+                    } else {
+                        $result[$periodKey]['is_predict'] = false;
+                    }
                 }
             }
         }
@@ -220,13 +227,14 @@ class DudanAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
      *
      * @param array $paths 命中的全部坐标
      * @param int $periods 间隔期数
+     * @param int $minConsecutive 最小连续命中期数
      * @return array
      */
-    private function formatResult(array $paths, int $periods): array
+    private function formatResult(array $paths, int $periods, int $minConsecutive): array
     {
         $result = [];
         foreach ($paths as $path) {
-            $hitList = $this->processHistory($this->historyData, $periods, $path);
+            $hitList = $this->processHistory($this->historyData, $periods, $minConsecutive, $path);
             $result[] = [
                 'path_string' => $path,
                 'path' => explode('|', $path),

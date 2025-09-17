@@ -8,13 +8,13 @@ use Liangguifeng\LotteryAnalyzer\Analyzer\KillHundredTenSumTailAnalyzer;
 
 /**
  * 【杀百十和尾】测试用例.
+ * @internal
+ * @coversNothing
  */
 class KillHundredTenSumTailAnalyzerTest extends BaseFucai3DTest
 {
     /**
      * Setup.
-     *
-     * @return void
      */
     protected function setUp(): void
     {
@@ -24,10 +24,8 @@ class KillHundredTenSumTailAnalyzerTest extends BaseFucai3DTest
 
     /**
      * 分析测试.
-     *
-     * @return void
      */
-    public function testAnalyze() : void
+    public function testAnalyze(): void
     {
         $periods = 3;
         $consecutive = 40;
@@ -39,10 +37,8 @@ class KillHundredTenSumTailAnalyzerTest extends BaseFucai3DTest
 
     /**
      * 组合长度分析测试.
-     *
-     * @return void
      */
-    public function testCombinationSizeAnalyze() : void
+    public function testCombinationSizeAnalyze(): void
     {
         $periods = 3;
         $consecutive = 30;
@@ -55,10 +51,8 @@ class KillHundredTenSumTailAnalyzerTest extends BaseFucai3DTest
 
     /**
      * 压力测试.
-     *
-     * @return void
      */
-    public function testStressTest() : void
+    public function testStressTest(): void
     {
         $periods = 10; // 最大间隔期数
         $consecutive = 50; // 最大连续命中期数

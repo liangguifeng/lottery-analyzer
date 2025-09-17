@@ -10,13 +10,12 @@ use Liangguifeng\LotteryAnalyzer\Analyzer\KillTenOneSumTailAnalyzer;
  * 【杀十个和尾】测试用例.
  *
  * @coversNothing
+ * @internal
  */
 class KillTenOneSumTailAnalyzerTest extends BaseFucai3DTest
 {
     /**
      * Setup.
-     *
-     * @return void
      */
     protected function setUp(): void
     {
@@ -30,12 +29,11 @@ class KillTenOneSumTailAnalyzerTest extends BaseFucai3DTest
     public function testAnalyze()
     {
         $periods = 3;
-        $consecutive = 7;
+        $consecutive = 30;
         $result = $this->analyzer->analyze($periods, $consecutive);
-        $this->assertIsArray($result, sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 预测结果应为数组', $periods, $consecutive));
-        $this->assertNotEmpty($result, sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 预测结果不应为空', $periods, $consecutive));
-        $this->assertNotEmpty($result['hit_list'], sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 预测结果中命中的结果集不应为空', $periods, $consecutive));
-        $this->assertCount(4, $result['hit_list'], sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 预测结果中命中的结果集长度应等于4', $periods, $consecutive));
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        $this->assertCount(5, $result['hit_list']);
     }
 
     /**
@@ -44,13 +42,12 @@ class KillTenOneSumTailAnalyzerTest extends BaseFucai3DTest
     public function testCombinationSizeAnalyze()
     {
         $periods = 3;
-        $consecutive = 10;
+        $consecutive = 30;
         $combinationSize = 4;
         $result = $this->analyzer->analyze($periods, $consecutive, $combinationSize);
-        $this->assertIsArray($result, sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 组合数字长度：%s, 预测结果应为数组', $periods, $consecutive, $combinationSize));
-        $this->assertNotEmpty($result, sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s,  组合数字长度：%s, 预测结果不应为空', $periods, $consecutive, $combinationSize));
-        $this->assertNotEmpty($result['hit_list'], sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 组合数字长度：%s, 预测结果中命中的结果集不应为空', $periods, $consecutive, $combinationSize));
-        $this->assertCount(4, $result['hit_list'], sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 组合数字长度：%s, 预测结果中命中的结果集长度应等于4', $periods, $consecutive, $combinationSize));
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        $this->assertCount(6, $result['hit_list']);
     }
 
     /**
