@@ -379,9 +379,46 @@ abstract class BaseFucai3DTest extends TestCase
     ];
 
     /**
+     * 开始执行时间
+     *
+     * @var float|string
+     */
+    private float $startTime;
+
+    /**
+     * 最大允许耗时（秒）
+     *
+     * @var float
+     */
+    protected float $maxExecutionTime = 1.0;
+
+    /**
      * 测试对象
      *
      * @var AnalyzerInterface
      */
     protected AnalyzerInterface $analyzer;
+
+    /**
+     * phpunit 生命周期：开始前
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->startTime = microtime(true);
+    }
+
+    /**
+     * phpunit 生命周期：结束后
+     *
+     * @return void
+     */
+    protected function tearDown(): void
+    {
+        $duration = microtime(true) - $this->startTime;
+        $this->assertLessThanOrEqual($this->maxExecutionTime, $duration, sprintf("%s::%s 执行时间 %.4f 秒，超过限制 %.2f 秒", static::class, $this->name(), $duration, $this->maxExecutionTime));
+        parent::tearDown();
+    }
 }

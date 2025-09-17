@@ -37,6 +37,20 @@ class KillTenOneSumTailAnalyzerTest extends BaseFucai3DTest
     }
 
     /**
+     * 返回最大命中期数分析测试.
+     */
+    public function testAnalyzeWithMaxConsecutive()
+    {
+        $periods = 3;
+        $consecutive = 56;
+        $result = $this->analyzer->withMaxConsecutive(true)->analyze($periods, $consecutive);
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        $this->assertCount(1, $result['hit_list']);
+        $this->assertEquals(56, $result['hit_list'][0]['max_consecutive']);
+    }
+
+    /**
      * 组合长度分析测试.
      */
     public function testCombinationSizeAnalyze()
@@ -55,10 +69,13 @@ class KillTenOneSumTailAnalyzerTest extends BaseFucai3DTest
      */
     public function testStressTest()
     {
+        // 因为组合大，所以允许久一点
+        $this->maxExecutionTime = 3.0;
+
         $periods = 10; // 最大间隔期数
         $consecutive = 50; // 最大连续命中期数
         $result = $this->analyzer->analyze($periods, $consecutive);
-        $this->assertIsArray($result, sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 预测结果应为数组', $periods, $consecutive));
-        $this->assertNotEmpty($result, sprintf('当前测试的是: 间隔期数：%s, 最小连续命中期数：%s, 预测结果不应为空', $periods, $consecutive));
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
     }
 }

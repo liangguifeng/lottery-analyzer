@@ -28,7 +28,7 @@ class DanmaAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
         $chunks = array_slice(ArrayHelper::chuck($analyzerData, $periods + 1), 0, $minConsecutive);
 
         // 连续命中结果
-        $hitLists = array_map(fn($chunk) => $this->analyzeChunk($chunk, $periods, $combinationSize), $chunks);
+        $hitLists = array_map(fn ($chunk) => $this->analyzeChunk($chunk, $periods, $combinationSize), $chunks);
 
         // 满足最小连续命中期数的结果
         $result = $this->intersectHitResults($hitLists);
@@ -86,8 +86,8 @@ class DanmaAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
                 continue;
             }
             [$g, $pos] = explode('_', $p);
-            $g = (int)$g;
-            $pos = (int)$pos;
+            $g = (int) $g;
+            $pos = (int) $pos;
             if ($g <= 0 || $pos <= 0) {
                 continue;
             }
@@ -234,14 +234,17 @@ class DanmaAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
     {
         $result = [];
         foreach ($paths as $path) {
-            $hitList = $this->processHistory($this->historyData, $periods, $path);
-
+            // 是否计算最大连续命中期数
             if ($this->withMaxConsecutive) {
                 $maxConsecutive = $this->getMaxConsecutive($path, $periods);
             }
+
+            $hitList = $this->processHistory($this->historyData, $periods, $minConsecutive, $path);
+
             $result[] = [
                 'path_string' => $path,
                 'path' => explode('|', $path),
+                'max_consecutive' => $maxConsecutive,
                 'items' => $hitList,
             ];
         }
@@ -249,7 +252,14 @@ class DanmaAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
         return $result;
     }
 
-    private function getMaxConsecutive(string $path, int $periods): array
+    /**
+     * 获取最大连续命中期数.
+     *
+     * @param string $path
+     * @param int $periods
+     * @return int
+     */
+    private function getMaxConsecutive(string $path, int $periods): int
     {
         // 分析数据(剔除预测数据的结果集)
         $analyzerData = $this->getAnalyzerData($periods);
@@ -257,40 +267,89 @@ class DanmaAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
         // 拆分为规律区间
         $chunks = ArrayHelper::chuck($analyzerData, $periods + 1);
 
-        // 解析path
+        // 解析并格式化坐标
+        $coords = $this->parsePathCoords($path);
+
+        $maxConsecutive = 0;
+
+        foreach ($chunks as $chunk) {
+            if (!$this->isChunkMatch($chunk, $coords, $periods)) {
+                break;
+            }
+
+            ++$maxConsecutive;
+        }
+
+        return $maxConsecutive;
+    }
+
+    /**
+     * 解析路径坐标.
+     *
+     * @param string $path
+     * @return array
+     */
+    private function parsePathCoords(string $path): array
+    {
         $coords = [];
+
         foreach (explode('|', $path) as $p) {
             if (strpos($p, '_') === false) {
                 continue;
             }
+
             [$g, $pos] = explode('_', $p);
-            $g = (int)$g;
-            $pos = (int)$pos;
+            $g = (int) $g;
+            $pos = (int) $pos;
+
             if ($g <= 0 || $pos <= 0) {
                 continue;
             }
+
             $coords[$g][] = $pos;
         }
 
-        // 去重每个 group 的 pos
         foreach ($coords as $g => $arr) {
             $coords[$g] = array_values(array_unique($arr));
         }
 
-        $maxConsecutive = 0;
-        foreach ($chunks as $chunk) {
-            // 排序
-            ksort($chunk);
+        return $coords;
+    }
 
-            $chunk = array_values($chunk);
+    /**
+     * 检查块是否匹配.
+     *
+     * @param array $chunk
+     * @param array $coords
+     * @param int $periods
+     * @return bool
+     */
+    private function isChunkMatch(array $chunk, array $coords, int $periods): bool
+    {
+        ksort($chunk);
+        $chunkValues = array_values($chunk);
 
-            // 获取$coords坐标里数据，判断其是否与$chunk的最后一个数组相交，如果相交，则$maxConsecutive+1
-            $res = ArrayHelper::getByPath($chunk, array_keys($coords));
-            $intersect = array_intersect(1, ArrayHelper::getByPath($chunk, array_values($coords)));
-            if ($intersect) {
-                $maxConsecutive++;
+        $waitCheckList = array_slice($chunkValues, 0, $periods);
+        $checkTarget = $chunkValues[$periods] ?? [];
+
+        if (empty($checkTarget) || empty($waitCheckList)) {
+            return false;
+        }
+
+        $waitCheckValues = [];
+        foreach ($coords as $groupIndex => $positions) {
+            if (!isset($waitCheckList[$groupIndex - 1])) {
+                continue;
+            }
+
+            $groupData = $waitCheckList[$groupIndex - 1];
+            foreach ($positions as $position) {
+                if (isset($groupData[$position - 1])) {
+                    $waitCheckValues[] = $groupData[$position - 1];
+                }
             }
         }
-        var_dump($maxConsecutive);
+
+        return !empty(array_intersect($waitCheckValues, $checkTarget));
     }
 }

@@ -37,6 +37,21 @@ class KillHundredOneSumTailAnalyzerTest extends BaseFucai3DTest
     }
 
     /**
+     * 返回最大命中期数分析测试.
+     */
+    public function testAnalyzeWithMaxConsecutive()
+    {
+        $periods = 3;
+        $consecutive = 39;
+        $result = $this->analyzer->withMaxConsecutive(true)->analyze($periods, $consecutive);
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        $this->assertCount(2, $result['hit_list']);
+        $this->assertEquals(39, $result['hit_list'][0]['max_consecutive']);
+        $this->assertEquals(39, $result['hit_list'][1]['max_consecutive']);
+    }
+
+    /**
      * 组合长度分析测试.
      */
     public function testCombinationSizeAnalyze()
@@ -55,6 +70,9 @@ class KillHundredOneSumTailAnalyzerTest extends BaseFucai3DTest
      */
     public function testStressTest()
     {
+        // 因为组合大，所以允许久一点
+        $this->maxExecutionTime = 3.0;
+
         $periods = 10; // 最大间隔期数
         $consecutive = 50; // 最大连续命中期数
         $result = $this->analyzer->analyze($periods, $consecutive);
