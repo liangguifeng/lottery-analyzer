@@ -55,47 +55,89 @@ class ArrayHelper
      */
     public static function generateCrossGroupCombinations(array $groups, int $combinationSize = 3): array
     {
-        // 将原始数组扁平化为带组号和元素索引的项
-        $flattenedItems = [];
-        $groupNumber = 1;
-        foreach ($groups as $groupValues) {
-            foreach ($groupValues as $index => $value) {
-                $flattenedItems[] = [
-                    'group' => $groupNumber,
-                    'position' => (int) $index + 1, // 从1开始计数
-                    'value' => $value,
-                ];
-            }
-            ++$groupNumber;
+        if ($combinationSize <= 0 || empty($groups)) {
+            return [];
         }
 
-        $totalItems = count($flattenedItems);
-        $result = [];
-        $stack = [];
+        // 将原始数组转换为带组号和元素索引的项
+        $items = [];
+        $groupIndex = 1;
 
-        // 递归生成组合
-        $recurse = function (int $startIndex, int $depth) use (&$recurse, &$result, &$stack, $flattenedItems, $totalItems, $combinationSize) {
-            if ($depth === $combinationSize) {
-                $keyParts = [];
-                $values = [];
-                foreach ($stack as $itemIndex) {
-                    $item = $flattenedItems[$itemIndex];
-                    $keyParts[] = $item['group'] . '_' . $item['position'];
-                    $values[] = $item['value'];
+        foreach ($groups as $groupValues) {
+            if (!empty($groupValues)) {
+                foreach ($groupValues as $position => $value) {
+                    $items[] = [
+                        'group' => $groupIndex,
+                        'position' => (int) $position + 1, // 从1开始计数
+                        'value' => $value,
+                    ];
                 }
-                $result[implode('|', $keyParts)] = $values;
-                return;
+            }
+            ++$groupIndex;
+        }
+
+        if (count($items) < $combinationSize) {
+            return [];
+        }
+
+        return self::generateCombinations($items, $combinationSize);
+    }
+
+    /**
+     * 使用迭代方法生成组合，避免递归开销
+     *
+     * @param array $items
+     * @param int $combinationSize
+     * @return array
+     */
+    private static function generateCombinations(array $items, int $combinationSize): array
+    {
+        $totalItems = count($items);
+        $result = [];
+
+        // 初始化索引数组
+        $indices = range(0, $combinationSize - 1);
+
+        do {
+            // 构建当前组合
+            $keyParts = [];
+            $values = [];
+
+            foreach ($indices as $index) {
+                $item = $items[$index];
+                $keyParts[] = $item['group'] . '_' . $item['position'];
+                $values[] = $item['value'];
             }
 
-            // 从当前索引开始生成组合
-            for ($i = $startIndex; $i <= $totalItems - ($combinationSize - $depth); ++$i) {
-                $stack[$depth] = $i;
-                $recurse($i + 1, $depth + 1);
-            }
-        };
-
-        $recurse(0, 0);
+            $result[implode('|', $keyParts)] = $values;
+        } while (self::nextCombination($indices, $totalItems, $combinationSize));
 
         return $result;
+    }
+
+    /**
+     * 计算下一个组合的索引.
+     *
+     * @param array $indices
+     * @param int $totalItems
+     * @param int $combinationSize
+     * @return bool
+     */
+    private static function nextCombination(array &$indices, int $totalItems, int $combinationSize): bool
+    {
+        for ($i = $combinationSize - 1; $i >= 0; --$i) {
+            if ($indices[$i] < $totalItems - ($combinationSize - $i)) {
+                ++$indices[$i];
+
+                // 重置后续索引
+                for ($j = $i + 1; $j < $combinationSize; ++$j) {
+                    $indices[$j] = $indices[$j - 1] + 1;
+                }
+
+                return true;
+            }
+        }
+
+        return false;
     }
 }

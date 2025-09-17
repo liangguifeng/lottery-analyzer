@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Liangguifeng\LotteryAnalyzer\Analyzer;
 
+use Liangguifeng\LotteryAnalyzer\Enum\ErrorCode;
+use Liangguifeng\LotteryAnalyzer\Exceptions\InvalidDataException;
 use Liangguifeng\LotteryAnalyzer\Support\ArrayHelper;
 
 abstract class AbstractAnalyzer implements AnalyzerInterface
@@ -25,6 +27,10 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
      */
     public function __construct(array $historyData)
     {
+        if (empty($historyData)) {
+            throw new InvalidDataException('History lottery data can not be empty.', ErrorCode::EMPTY_HISTORY);
+        }
+
         // 先排序，防呆...
         krsort($historyData);
         $this->historyData = $historyData;
@@ -99,18 +105,12 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
             return [];
         }
 
-        // 获取第一个结果集作为参照物
-        $first = array_keys($hitLists[0]);
+        $result = reset($hitLists);
+        foreach ($hitLists as $hitList) {
+            $result = array_intersect_key($result, $hitList);
+        }
 
-        return array_values(array_filter($first, function ($key) use ($hitLists) {
-            foreach ($hitLists as $hits) {
-                // 如果结果集的key不在其他结果集的key中，则剔除
-                if (!array_key_exists($key, $hits)) {
-                    return false;
-                }
-            }
-            return true;
-        }));
+        return array_keys($result);
     }
 
     /**
