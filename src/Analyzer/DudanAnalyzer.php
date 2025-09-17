@@ -249,6 +249,8 @@ class DudanAnalyzer extends AbstractAnalyzer implements AnalyzerInterface
             ];
         }
 
+        usort($result, fn($a, $b) => $b['max_consecutive'] <=> $a['max_consecutive']);
+
         return $result;
     }
 

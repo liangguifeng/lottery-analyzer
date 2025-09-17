@@ -259,6 +259,8 @@ class KillTenOneSumTailAnalyzer extends AbstractAnalyzer implements AnalyzerInte
             ];
         }
 
+        usort($result, fn($a, $b) => $b['max_consecutive'] <=> $a['max_consecutive']);
+
         return $result;
     }
 
