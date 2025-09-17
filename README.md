@@ -246,6 +246,11 @@ foreach ($killResult['hit_list'] as $hit) {
 4. 彩票开奖具有随机性，分析结果仅供参考，不能保证100%准确
 5. 建议结合多种分析方法综合判断
 
+# 由 JetBrains 支持的项目
+非常感谢 JetBrains 向我提供了执照，可以从事该项目和其他开源项目。
+
+[![](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)](https://www.jetbrains.com/?from=https://github.com/liangguifeng)
+
 ## License
 
 MIT License
