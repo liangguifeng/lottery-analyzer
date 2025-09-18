@@ -283,7 +283,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
         // 分析数据(剔除预测数据的结果集)
         $analyzerData = $this->getAnalyzerData($analyzePeriods);
 
-        // 拆分为规律区间，屏蔽间隔期数数据
+        // 拆分为规律区间
         $chunks = ArrayHelper::chuck($analyzerData, $analyzePeriods + $intervalPeriods + 1);
 
         // 解析并格式化坐标
@@ -291,6 +291,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
 
         $maxConsecutive = 0;
         foreach ($chunks as $chunk) {
+            // 屏蔽间隔期数数据
             $chunk = array_slice($chunk, 0, $analyzePeriods + 1, true);
 
             if (!$this->isChunkMatch($chunk, $coords, $analyzePeriods)) {
