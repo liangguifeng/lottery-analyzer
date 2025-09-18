@@ -52,12 +52,12 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
     /**
      * 获取待分析数据(剔除预测数据的结果集).
      *
-     * @param int $periods 间隔期数
+     * @param int $analyzePeriods 分析期数
      * @return array
      */
-    protected function getAnalyzerData(int $periods): array
+    protected function getAnalyzerData(int $analyzePeriods): array
     {
-        return array_slice($this->historyData, $periods, null, true);
+        return array_slice($this->historyData, $analyzePeriods, null, true);
     }
 
     /**
@@ -117,12 +117,13 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
      * 根据命中路径，处理历史数据.
      *
      * @param array $history 历史数据
-     * @param int $periods 间隔期数
+     * @param int $analyzePeriods 分析期数
      * @param int $minConsecutive 最小连续命中期数
+     * @param int $intervalPeriods 间隔期数
      * @param string $path 命中的具体坐标
      * @return array
      */
-    protected function processHistory(array $history, int $periods, int $minConsecutive, string $path): array
+    protected function processHistory(array $history, int $analyzePeriods, int $minConsecutive, int $intervalPeriods, string $path): array
     {
         // 1. 按 key 升序排序
         ksort($history);
@@ -136,15 +137,15 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
         $groups = [];
         $cursor = $total;
 
-        // 第一个分片：取 periods 个
-        $take = min($periods, $cursor);
+        // 第一个分片：取 分析期数 个
+        $take = min($analyzePeriods, $cursor);
         $start = $cursor - $take;
         $groups[] = array_slice($keys, $start, $take); // 保持升序
         $cursor -= $take;
 
-        // 后续每轮取 periods + 1 个
+        // 后续每轮取 分析期数 + 间隔期数 + 预测期数 个
         while ($cursor > 0) {
-            $take = min($periods + 1, $cursor);
+            $take = min($analyzePeriods + $intervalPeriods + 1, $cursor);
             $start = $cursor - $take;
             $groups[] = array_slice($keys, $start, $take);
             $cursor -= $take;
@@ -180,7 +181,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
                 if ($times < $minConsecutive) {
                     $result[$periodKey]['hit'] = array_values($hit);
                     // 预测位标记
-                    if ($localIndex === $periods) {
+                    if ($localIndex === $analyzePeriods + $intervalPeriods) {
                         $result[$periodKey]['is_predict'] = true;
                     } else {
                         $result[$periodKey]['is_predict'] = false;
@@ -199,21 +200,22 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
      * 格式化结果集.
      *
      * @param array $paths 命中的全部坐标
-     * @param int $periods 间隔期数
+     * @param int $analyzePeriods 分析期数
      * @param int $minConsecutive 最小连续命中期数
+     * @param int $intervalPeriods 间隔期数
      * @return array
      */
-    protected function formatResult(array $paths, int $periods, int $minConsecutive): array
+    protected function formatResult(array $paths, int $analyzePeriods, int $minConsecutive, int $intervalPeriods): array
     {
         $result = [];
         foreach ($paths as $path) {
             // 是否计算最大连续命中期数
             $maxConsecutive = 0;
             if ($this->withMaxConsecutive) {
-                $maxConsecutive = $this->getMaxConsecutive($path, $periods);
+                $maxConsecutive = $this->getMaxConsecutive($path, $analyzePeriods);
             }
 
-            $hitList = $this->processHistory($this->historyData, $periods, $minConsecutive, $path);
+            $hitList = $this->processHistory($this->historyData, $analyzePeriods, $minConsecutive, $intervalPeriods, $path);
 
             $result[] = [
                 'path_string' => $path,
@@ -232,16 +234,16 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
      * 获取最大连续命中期数.
      *
      * @param string $path
-     * @param int $periods
+     * @param int $analyzePeriods
      * @return int
      */
-    protected function getMaxConsecutive(string $path, int $periods): int
+    protected function getMaxConsecutive(string $path, int $analyzePeriods): int
     {
         // 分析数据(剔除预测数据的结果集)
-        $analyzerData = $this->getAnalyzerData($periods);
+        $analyzerData = $this->getAnalyzerData($analyzePeriods);
 
         // 拆分为规律区间
-        $chunks = ArrayHelper::chuck($analyzerData, $periods + 1);
+        $chunks = ArrayHelper::chuck($analyzerData, $analyzePeriods + 1);
 
         // 解析并格式化坐标
         $coords = $this->parsePathCoords($path);
@@ -249,7 +251,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
         $maxConsecutive = 0;
 
         foreach ($chunks as $chunk) {
-            if (!$this->isChunkMatch($chunk, $coords, $periods)) {
+            if (!$this->isChunkMatch($chunk, $coords, $analyzePeriods)) {
                 break;
             }
 
@@ -264,16 +266,16 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
      *
      * @param array $chunk
      * @param array $coords
-     * @param int $periods
+     * @param int $analyzePeriods
      * @return bool
      */
-    protected function isChunkMatch(array $chunk, array $coords, int $periods): bool
+    protected function isChunkMatch(array $chunk, array $coords, int $analyzePeriods): bool
     {
         ksort($chunk);
         $chunkValues = array_values($chunk);
 
-        $waitCheckList = array_slice($chunkValues, 0, $periods);
-        $checkTarget = $chunkValues[$periods] ?? [];
+        $waitCheckList = array_slice($chunkValues, 0, $analyzePeriods);
+        $checkTarget = $chunkValues[$analyzePeriods] ?? [];
 
         if (empty($checkTarget) || empty($waitCheckList)) {
             return false;
@@ -309,23 +311,23 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
      * 按块分析.
      *
      * @param array $chunk 待分析数据块
-     * @param int $periods 间隔期数
+     * @param int $analyzePeriods 分析期数
      * @param int $combinationSize 待分析数据块的组合大小
      * @return array
      */
-    protected function analyzeChunk(array $chunk, int $periods, int $combinationSize): array
+    protected function analyzeChunk(array $chunk, int $analyzePeriods, int $combinationSize): array
     {
         // 排序
         ksort($chunk);
 
-        // 间隔期数
-        $patternData = array_slice($chunk, 0, $periods, true);
+        // 分析期数
+        $patternData = array_slice($chunk, 0, $analyzePeriods, true);
 
         // 排列组合
         $combinations = ArrayHelper::generateCrossGroupCombinations($patternData, $combinationSize);
 
         // 预测期数据
-        $nextData = array_slice($chunk, $periods, $periods + 1, true);
+        $nextData = array_slice($chunk, $analyzePeriods, 1, true);
 
         return $this->checkCombinationsAgainstNext($combinations, reset($nextData));
     }
