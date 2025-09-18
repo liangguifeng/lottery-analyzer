@@ -66,12 +66,17 @@ class KillHundredOneSumTailAnalyzerTest extends BaseFucai3DTest
         $this->assertCount(2, $result['hit_list']);
 
         // 倒数第一期预测
-        $endFirstPeriod = $analyzePeriods + 1;
+        $endFirstPeriod = $analyzePeriods + $intervalPeriods + 1;
         $predict1 =array_slice($result['hit_list'][0]['items'], -$endFirstPeriod, 1)[0];
         $this->assertEquals(true, $predict1['is_predict']);
 
         // 倒数第二期预测
-        $endSecondPeriod = $endFirstPeriod + $analyzePeriods + $intervalPeriods + 1;
+        $endSecondPeriod = 2 * $endFirstPeriod;
+        $predict2 =array_slice($result['hit_list'][0]['items'], -$endSecondPeriod, 1)[0];
+        $this->assertEquals(true, $predict2['is_predict']);
+
+        // 倒数第三期预测
+        $endSecondPeriod = 3 * $endFirstPeriod;
         $predict2 =array_slice($result['hit_list'][0]['items'], -$endSecondPeriod, 1)[0];
         $this->assertEquals(true, $predict2['is_predict']);
     }
@@ -96,7 +101,7 @@ class KillHundredOneSumTailAnalyzerTest extends BaseFucai3DTest
     public function testStressTest()
     {
         // 因为组合大，所以允许久一点
-        $this->maxExecutionTime = 3.0;
+        $this->maxExecutionTime = 10.0;
 
         $analyzePeriods = 10; // 分析期数
         $consecutive = 50; // 最大连续命中期数

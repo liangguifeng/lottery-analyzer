@@ -32,11 +32,17 @@ class KillTenOneSumTailAnalyzer extends SumTailAnalyzer implements AnalyzerInter
         // 分析数据(剔除预测数据的结果集)
         $analyzerData = $this->getAnalyzerData($analyzePeriods);
 
-        // 拆分为规律区间
-        $chunks = array_slice(ArrayHelper::chuck($analyzerData, $analyzePeriods + 1), 0, $minConsecutive);
+        // 拆分为规律区间，屏蔽间隔期数数据
+        $chunks = ArrayHelper::chuck($analyzerData, $analyzePeriods + $intervalPeriods + 1);
+        foreach ($chunks as &$chunk) {
+            $chunk = array_slice($chunk, 0, $analyzePeriods + 1, true);
+        }
+
+        // 需要分析的块
+        $analyzerChunks = array_slice($chunks, 0, $minConsecutive);
 
         // 连续命中结果
-        $hitLists = array_map(fn ($chunk) => $this->analyzeChunk($chunk, $analyzePeriods, $combinationSize), $chunks);
+        $hitLists = array_map(fn ($chunk) => $this->analyzeChunk($chunk, $analyzePeriods, $combinationSize), $analyzerChunks);
 
         // 满足最小连续命中期数的结果
         $result = $this->intersectHitResults($hitLists);

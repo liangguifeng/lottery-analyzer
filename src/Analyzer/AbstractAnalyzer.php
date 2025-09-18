@@ -181,7 +181,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
                 if ($times < $minConsecutive) {
                     $result[$periodKey]['hit'] = array_values($hit);
                     // 预测位标记
-                    if ($localIndex === $analyzePeriods + $intervalPeriods) {
+                    if ($localIndex === $analyzePeriods) {
                         $result[$periodKey]['is_predict'] = true;
                     } else {
                         $result[$periodKey]['is_predict'] = false;
