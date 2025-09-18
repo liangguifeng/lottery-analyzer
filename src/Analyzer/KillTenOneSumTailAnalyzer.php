@@ -42,11 +42,12 @@ class KillTenOneSumTailAnalyzer extends SumTailAnalyzer implements AnalyzerInter
         $result = $this->intersectHitResults($hitLists);
 
         return [
-            'periods' => $analyzePeriods,
+            'analyze_periods' => $analyzePeriods,
+            'interval_periods' => $intervalPeriods,
             'min_consecutive' => $minConsecutive,
             'combination_size' => $combinationSize,
             'hit_count' => count($result),
-            'hit_list' => $this->formatResult($result, $analyzePeriods, $minConsecutive),
+            'hit_list' => $this->formatResult($result, $analyzePeriods, $minConsecutive, $intervalPeriods),
         ];
     }
 

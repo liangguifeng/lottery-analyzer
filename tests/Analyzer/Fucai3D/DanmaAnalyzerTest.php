@@ -97,7 +97,7 @@ class DanmaAnalyzerTest extends BaseFucai3DTest
      */
     public function testStressTest()
     {
-        $analyzePeriods = 10; // 最大间隔期数
+        $analyzePeriods = 10; // 分析期数
         $consecutive = 50; // 最大连续命中期数
         $result = $this->analyzer->analyze($analyzePeriods, $consecutive);
         $this->assertIsArray($result);

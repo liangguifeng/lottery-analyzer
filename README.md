@@ -69,11 +69,12 @@ $historyData = [
 
 ### 分析参数
 
-所有分析器都支持以下三个核心参数：
+所有分析器都支持以下四个核心参数：
 
-1. **periods（间隔期数）**：用于分析规律的历史期数
+1. **analyzePeriods（分析期数）**：用于分析规律的历史期数
 2. **minConsecutive（最小连续命中期数）**：规律需要连续命中的最小期数
 3. **combinationSize（组合大小）**：从每期数据中选取的数字个数
+4. **intervalPeriods（间隔期数）**：上一次分析到下一次预测开始的间隔
 
 ## 分析器类型
 
@@ -85,7 +86,7 @@ $historyData = [
 use Liangguifeng\LotteryAnalyzer\Analyzer\DanmaAnalyzer;
 
 $analyzer = new DanmaAnalyzer($historyData);
-$result = $analyzer->analyze(3, 3, 3); // periods, minConsecutive, combinationSize
+$result = $analyzer->analyze(3, 3, 3, 0); // analyzePeriods, minConsecutive, combinationSize, intervalPeriods
 ```
 
 ### 毒胆分析器 (DudanAnalyzer)
@@ -96,7 +97,7 @@ $result = $analyzer->analyze(3, 3, 3); // periods, minConsecutive, combinationSi
 use Liangguifeng\LotteryAnalyzer\Analyzer\DudanAnalyzer;
 
 $analyzer = new DudanAnalyzer($historyData);
-$result = $analyzer->analyze(3, 3, 3);
+$result = $analyzer->analyze(3, 3, 3, 0);
 ```
 
 ### 和尾分析器 (SumTailAnalyzer)
@@ -111,7 +112,7 @@ $result = $analyzer->analyze(3, 3, 3);
 use Liangguifeng\LotteryAnalyzer\Analyzer\KillHundredOneSumTailAnalyzer;
 
 $analyzer = new KillHundredOneSumTailAnalyzer($historyData);
-$result = $analyzer->analyze(3, 3, 3);
+$result = $analyzer->analyze(3, 3, 3, 0);
 ```
 
 #### 杀百十和尾分析器 (KillHundredTenSumTailAnalyzer)
@@ -122,7 +123,7 @@ $result = $analyzer->analyze(3, 3, 3);
 use Liangguifeng\LotteryAnalyzer\Analyzer\KillHundredTenSumTailAnalyzer;
 
 $analyzer = new KillHundredTenSumTailAnalyzer($historyData);
-$result = $analyzer->analyze(3, 3, 3);
+$result = $analyzer->analyze(3, 3, 3, 0);
 ```
 
 #### 杀十个和尾分析器 (KillTenOneSumTailAnalyzer)
@@ -133,7 +134,7 @@ $result = $analyzer->analyze(3, 3, 3);
 use Liangguifeng\LotteryAnalyzer\Analyzer\KillTenOneSumTailAnalyzer;
 
 $analyzer = new KillTenOneSumTailAnalyzer($historyData);
-$result = $analyzer->analyze(3, 3, 3);
+$result = $analyzer->analyze(3, 3, 3, 0);
 ```
 
 ## 高级用法
@@ -142,7 +143,7 @@ $result = $analyzer->analyze(3, 3, 3);
 
 ```php
 $analyzer = new DanmaAnalyzer($historyData);
-$result = $analyzer->withMaxConsecutive(true)->analyze(3, 3, 3);
+$result = $analyzer->withMaxConsecutive(true)->analyze(3, 3, 3, 0);
 ```
 
 ### 自定义参数
@@ -150,9 +151,10 @@ $result = $analyzer->withMaxConsecutive(true)->analyze(3, 3, 3);
 ```php
 // 使用不同的参数组合
 $result = $analyzer->analyze(
-    periods: 5,          // 分析最近5期数据
+    analyzePeriods: 5,   // 分析最近5期数据
     minConsecutive: 4,   // 要求至少连续4期命中
-    combinationSize: 2   // 使用2个数字的组合
+    combinationSize: 2,  // 使用2个数字的组合
+    intervalPeriods: 0   // 间隔期数
 );
 ```
 
@@ -162,7 +164,8 @@ $result = $analyzer->analyze(
 
 ```php
 [
-    'periods' => 3,                // 使用的间隔期数
+    'analyze_periods' => 3,        // 分析期数
+    'interval_periods' => 3,       // 间隔期数
     'min_consecutive' => 3,        // 最小连续命中期数
     'combination_size' => 3,       // 组合大小
     'hit_count' => 5,              // 命中规律数量
@@ -234,7 +237,7 @@ foreach ($killResult['hit_list'] as $hit) {
 
 ## 性能优化建议
 
-1. **合理设置参数**：避免设置过大的|periods|和|combinationSize|值
+1. **合理设置参数**：避免设置过大的|analyzePeriods|和|combinationSize|值
 2. **数据量控制**：使用适量的历史数据，通常50-200期较为合适
 3. **批量处理**：对于大量数据，考虑分批处理
 
