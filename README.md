@@ -171,10 +171,13 @@ $result = $analyzer->analyze(
     'hit_count' => 5,              // 命中规律数量
     'hit_list' => [                // 命中规律列表
         [
-            'path_string' => '1_1|2_2',  // 规律路径字符串表示
-            'path' => ['1_1', '2_2'],    // 规律路径数组表示
-            'max_consecutive' => 8,      // 最大连续命中次数
-            'items' => [                 // 规律详情
+            'path_string' => '1_1|2_2',           // 规律路径字符串表示
+            'path' => ['1_1', '2_2'],             // 规律路径数组表示
+            'max_consecutive' => 8,               // 最大连续命中次数
+            'next_period' => 2025248,             // 下一期期号
+            'next_period_data' => [9, 4, 8],      // 下一期预测
+            'next_period_data_string' => '9,4,8', // 下一期预测(字符串)
+            'items' => [                          // 规律详情
                 // ... 详细数据
             ]
         ],

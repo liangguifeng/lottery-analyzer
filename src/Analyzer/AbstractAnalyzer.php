@@ -217,17 +217,57 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
 
             $hitList = $this->processHistory($this->historyData, $analyzePeriods, $minConsecutive, $intervalPeriods, $path);
 
+            $nextInfo = $this->getAnalyzerNextInfo($hitList);
+
             $result[] = [
                 'path_string' => $path,
                 'path' => explode('|', $path),
                 'max_consecutive' => $maxConsecutive,
+                ...$nextInfo,
                 'items' => $hitList,
             ];
         }
 
-        usort($result, fn($a, $b) => $b['max_consecutive'] <=> $a['max_consecutive']);
+        usort($result, fn ($a, $b) => $b['max_consecutive'] <=> $a['max_consecutive']);
 
         return $result;
+    }
+
+    /**
+     * 获取下一期即将开奖信息.
+     *
+     * @param array $hitList 命中数据列表
+     * @return array
+     */
+    protected function getAnalyzerNextInfo(array $hitList): array
+    {
+        $endAnalyzePeriodsData = [];
+        foreach (array_reverse($hitList, true) as $key => $item) {
+            if (!empty($item['is_predict']) && $item['is_predict'] === true) {
+                break;
+            }
+            $endAnalyzePeriodsData[$key] = $item;
+        }
+
+        $analyze = [];
+        foreach ($endAnalyzePeriodsData as $item) {
+            if (empty($item['hit'])) {
+                continue;
+            }
+            foreach ($item['hit'] as $hitIndex) {
+                if (isset($item['origin'][$hitIndex - 1])) {
+                    $analyze[] = $item['origin'][$hitIndex - 1];
+                }
+            }
+        }
+
+        $maxPeriod = intval(max(array_keys($hitList)));
+
+        return [
+            'next_period' => ++$maxPeriod,
+            'next_period_data' => $analyze,
+            'next_period_data_string' => implode(',', $analyze),
+        ];
     }
 
     /**
@@ -299,7 +339,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
     }
 
     /**
-     * 检查是否匹配的具体实现，由子类实现
+     * 检查是否匹配的具体实现，由子类实现.
      *
      * @param array $waitCheckValues
      * @param array $checkTarget
@@ -352,7 +392,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
     }
 
     /**
-     * 检查组合是否匹配，由子类实现具体逻辑
+     * 检查组合是否匹配，由子类实现具体逻辑.
      *
      * @param array $values 组合值
      * @param array $nextData 预测数据
