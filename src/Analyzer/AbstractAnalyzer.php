@@ -212,7 +212,7 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
             // 是否计算最大连续命中期数
             $maxConsecutive = 0;
             if ($this->withMaxConsecutive) {
-                $maxConsecutive = $this->getMaxConsecutive($path, $analyzePeriods);
+                $maxConsecutive = $this->getMaxConsecutive($path, $analyzePeriods, $intervalPeriods);
             }
 
             $hitList = $this->processHistory($this->historyData, $analyzePeriods, $minConsecutive, $intervalPeriods, $path);
@@ -275,22 +275,24 @@ abstract class AbstractAnalyzer implements AnalyzerInterface
      *
      * @param string $path
      * @param int $analyzePeriods
+     * @param int $intervalPeriods
      * @return int
      */
-    protected function getMaxConsecutive(string $path, int $analyzePeriods): int
+    protected function getMaxConsecutive(string $path, int $analyzePeriods, $intervalPeriods): int
     {
         // 分析数据(剔除预测数据的结果集)
         $analyzerData = $this->getAnalyzerData($analyzePeriods);
 
-        // 拆分为规律区间
-        $chunks = ArrayHelper::chuck($analyzerData, $analyzePeriods + 1);
+        // 拆分为规律区间，屏蔽间隔期数数据
+        $chunks = ArrayHelper::chuck($analyzerData, $analyzePeriods + $intervalPeriods + 1);
 
         // 解析并格式化坐标
         $coords = $this->parsePathCoords($path);
 
         $maxConsecutive = 0;
-
         foreach ($chunks as $chunk) {
+            $chunk = array_slice($chunk, 0, $analyzePeriods + 1, true);
+
             if (!$this->isChunkMatch($chunk, $coords, $analyzePeriods)) {
                 break;
             }
